@@ -10,6 +10,8 @@ import { LoginForm } from '@/components/auth/login-form';
 import { getColleges } from './actions/colleges';
 import { getPlatformSettings } from './actions/settings';
 import { HomeRedirect } from '@/components/auth/home-redirect';
+import { UniversityCarousel } from '@/components/university-carousel';
+import Script from 'next/script';
 
 export default async function HomePage() {
   const allColleges = await getColleges(false); // Fetch all colleges
@@ -58,25 +60,10 @@ export default async function HomePage() {
                 Explore and apply to these renowned institutions through COLLAPP.
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {featuredColleges.map((uni) => (
-                <Link key={uni.id} href={uni.url || '#'} target="_blank" rel="noopener noreferrer" className="block hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary rounded-xl">
-                  <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card text-card-foreground border-border">
-                    <div className="relative h-48 w-full bg-card-foreground/5 p-4">
-                      <Image src={uni.logoUrl} alt={`${uni.name} logo`} fill sizes="100vw" className="object-contain" data-ai-hint="university logo" />
-                    </div>
-                    <CardHeader className="text-center">
-                      <CardTitle className="font-headline text-xl text-card-foreground">{uni.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <CardDescription className="text-card-foreground/80 text-sm">{uni.description}</CardDescription>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-             {featuredColleges.length === 0 && (
-                <p className="text-center text-muted-foreground">No featured universities are available at the moment. Please check back later!</p>
+            {featuredColleges.length > 0 ? (
+              <UniversityCarousel colleges={featuredColleges} />
+            ) : (
+              <p className="text-center text-muted-foreground">No featured universities are available at the moment. Please check back later!</p>
             )}
             <div className="mt-12 text-center">
               <Link href="/colleges">
