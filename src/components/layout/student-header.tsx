@@ -13,6 +13,7 @@ import {
   LogOut,
   FileText,
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -179,6 +180,7 @@ export function StudentHeader() {
               <Settings className="h-4 w-4"/> Settings
             </Link>
           </DropdownMenuItem>
+          <ThemeToggle />
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer flex items-center gap-2">
              <LogOut className="h-4 w-4"/> Logout
