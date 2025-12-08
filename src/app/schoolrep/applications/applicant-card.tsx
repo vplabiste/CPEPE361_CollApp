@@ -18,7 +18,7 @@ import { isEqual } from 'lodash';
 
 interface ApplicantCardProps {
   application: Application;
-  onUpdate: () => void;
+  onUpdate: (keepOpenId?: string) => void;
 }
 
 const statusBadgeVariant = {
@@ -83,12 +83,36 @@ export function ApplicantCard({ application, onUpdate }: ApplicantCardProps) {
         const result = await batchUpdateDocumentStatuses(application.id, changedDocs);
         if (result.success) {
             toast({ title: 'Success', description: 'Document statuses updated.' });
-            onUpdate();
+            onUpdate(application.id);
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
         }
     });
   }
+
+  const applyBulkStatus = (status: DocumentStatus) => {
+    if (isDecided) return;
+    const defaultNote = 'Please resubmit this document.';
+    const nextDocuments = documentUpdates.map((doc) => {
+      if (status === 'Resubmit') {
+        return {
+          ...doc,
+          status,
+          resubmissionNote: doc.resubmissionNote || defaultNote,
+        };
+      }
+      const { resubmissionNote, ...rest } = doc;
+      return {
+        ...rest,
+        status,
+      };
+    });
+    setDocumentUpdates(nextDocuments);
+    toast({
+      title: 'Bulk change applied',
+      description: `All documents set to "${status}". Click "Save Document Statuses" to confirm.`,
+    });
+  };
 
   const handleDecision = (status: 'Accepted' | 'Rejected') => {
       if (status === 'Accepted' && !finalProgram) {
@@ -154,6 +178,32 @@ export function ApplicantCard({ application, onUpdate }: ApplicantCardProps) {
         <div>
             <div className="flex justify-between items-center mb-2">
                 <h3 className="text-base font-semibold">Submitted Documents</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => applyBulkStatus('Accepted')}
+                    disabled={isPending || isDecided}
+                  >
+                    Accept All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => applyBulkStatus('Rejected')}
+                    disabled={isPending || isDecided}
+                  >
+                    Reject All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => applyBulkStatus('Resubmit')}
+                    disabled={isPending || isDecided}
+                  >
+                    Needs Resubmission (All)
+                  </Button>
+                </div>
                 {areDocumentsChanged && !isDecided && (
                     <Button size="sm" onClick={handleSaveDocStatuses} disabled={isPending}>
                         <Save className="mr-2 h-4 w-4"/> Save Document Statuses
