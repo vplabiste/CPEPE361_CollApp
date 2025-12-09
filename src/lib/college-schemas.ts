@@ -99,6 +99,15 @@ export const editCollegeSchema = z.object({
 export type EditCollegeFormInputs = z.infer<typeof editCollegeSchema>;
 
 
+export const requirementIds = [
+  'high_school_transcript',
+  'birth_certificate',
+  'letter_of_recommendation',
+  'certificate_good_moral',
+  'college_entrance_exam',
+  'id_photo',
+] as const;
+
 export const availableRequirements = [
   { id: 'high_school_transcript', label: 'High School Transcript' },
   { id: 'birth_certificate', label: 'PSA Birth Certificate' },
@@ -108,10 +117,12 @@ export const availableRequirements = [
   { id: 'id_photo', label: '2x2 ID Photo' },
 ] as const;
 
+export type RequirementId = typeof requirementIds[number];
+
 export const schoolRepOnboardingSchema = z.object({
   region: z.string().min(1, { message: "Region is required."}),
   city: z.string().min(1, { message: "City is required."}),
-  requirements: z.array(z.string()).refine((value) => value.some((item) => item), {
+  requirements: z.array(z.enum(requirementIds)).refine((value) => value.length > 0, {
     message: "You have to select at least one requirement.",
   }),
   programs: z.array(z.object({ value: z.string().min(1, 'Program name cannot be empty.') })),
@@ -132,7 +143,7 @@ export interface College {
     region?: string;
     city?: string;
     isPublished?: boolean;
-    applicationRequirements?: string[];
+    applicationRequirements?: RequirementId[];
     programs?: string[];
     brochureUrls?: string[];
     customRequirements?: string[];

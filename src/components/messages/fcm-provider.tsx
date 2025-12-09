@@ -13,12 +13,12 @@ export function FCMProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && isFirebaseConfigured && messaging) {
-        
+
         const requestPermission = async () => {
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted' && auth.currentUser) {
-                    const currentToken = await getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY });
+                    const currentToken = await getToken(messaging!, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY });
                     if (currentToken) {
                         await saveFCMToken(auth.currentUser.uid, currentToken);
                     } else {
@@ -32,7 +32,7 @@ export function FCMProvider({ children }: { children: React.ReactNode }) {
 
         requestPermission();
 
-        const unsubscribe = onMessage(messaging, (payload) => {
+        const unsubscribe = onMessage(messaging!, (payload) => {
             console.log('Foreground message received.', payload);
             toast({
                 title: payload.notification?.title,

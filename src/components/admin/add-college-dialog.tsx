@@ -13,7 +13,11 @@ import {
 import { AddCollegeForm } from '@/components/admin/add-college-form';
 import { PlusCircle } from 'lucide-react';
 
-export function AddCollegeDialog() {
+interface AddCollegeDialogProps {
+  onSuccess?: () => void;
+}
+
+export function AddCollegeDialog({ onSuccess }: AddCollegeDialogProps = {}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -31,7 +35,7 @@ export function AddCollegeDialog() {
             Fill in the details for the new college and its representative.
           </DialogDescription>
         </DialogHeader>
-        <AddCollegeForm onSuccess={() => setOpen(false)} />
+        <AddCollegeForm onSuccess={() => { setOpen(false); onSuccess?.(); }} />
       </DialogContent>
     </Dialog>
   );

@@ -59,7 +59,7 @@ export function OnboardingForm() {
       firstName: '',
       middleName: '',
       lastName: '',
-      sex: '',
+      sex: undefined,
       dateOfBirth: '',
       isInternational: 'philippines',
       region: '',

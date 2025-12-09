@@ -370,7 +370,7 @@ export async function resubmitDocument(formData: FormData, applicationId: string
         if (documentIndex === -1) {
             return { success: false, message: 'Document not found in application.' };
         }
-        
+
         const oldDocument = application.documents[documentIndex];
 
         // Delete old file from Cloudinary
@@ -378,7 +378,7 @@ export async function resubmitDocument(formData: FormData, applicationId: string
         if (oldPublicId) {
             await cloudinary.uploader.destroy(oldPublicId, { resource_type: 'auto' }).catch(e => console.warn(`Could not delete old Cloudinary file: ${e.message}`));
         }
-        
+
         // Upload new file
         const newFileUrl = await uploadFile(documentFile, application.studentId, 'application-doc');
 
@@ -395,6 +395,61 @@ export async function resubmitDocument(formData: FormData, applicationId: string
 
     } catch (error: any) {
         console.error('Error resubmitting document:', error);
+        return { success: false, message: `An unexpected error occurred: ${error.message}` };
+    }
+}
+
+export async function addOtherDocument(formData: FormData, applicationId: string): Promise<ActionResult> {
+    const validatedFields = resubmissionSchema.safeParse({
+        documentFile: formData.get('documentFile'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            message: 'Invalid file provided.',
+            errors: validatedFields.error.issues,
+        };
+    }
+
+    const { documentFile } = validatedFields.data;
+
+    try {
+        const appDocRef = adminDb.collection('applications').doc(applicationId);
+        const appDoc = await appDocRef.get();
+        if (!appDoc.exists) {
+            return { success: false, message: 'Application not found.' };
+        }
+
+        const application = appDoc.data() as Application;
+
+        // Prevent adding documents to accepted applications
+        if (application.status === 'Accepted') {
+            return { success: false, message: 'Cannot add documents to an accepted application.' };
+        }
+
+        // Upload new file
+        const newFileUrl = await uploadFile(documentFile, application.studentId, 'application-doc');
+
+        // Create new document entry
+        const newDocument = {
+            id: `other-${Date.now()}`, // Generate unique ID for other documents
+            label: 'Other File',
+            fileUrl: newFileUrl,
+            status: 'Pending' as const,
+        };
+
+        // Add new document to the application
+        const newDocuments = [...application.documents, newDocument];
+
+        await appDocRef.update({ documents: newDocuments });
+
+        revalidatePath(`/student/applications`);
+        revalidatePath(`/schoolrep/applications`);
+        return { success: true, message: 'Additional document added successfully.' };
+
+    } catch (error: any) {
+        console.error('Error adding other document:', error);
         return { success: false, message: `An unexpected error occurred: ${error.message}` };
     }
 }
