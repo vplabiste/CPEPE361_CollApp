@@ -22,6 +22,8 @@ import {
 import { regions } from '@/lib/ph-address-data';
 import { availableRequirements } from '@/lib/college-schemas';
 
+type RequirementId = "high_school_transcript" | "birth_certificate" | "letter_of_recommendation" | "certificate_good_moral" | "college_entrance_exam" | "id_photo";
+
 function CollegeListItemSkeleton() {
     return (
         <Card className="p-6">
@@ -179,7 +181,7 @@ export default function CollegesPage() {
                                             {(college.applicationRequirements && college.applicationRequirements.length > 0) || (college.customRequirements && college.customRequirements.length > 0) ? (
                                                 <>
                                                     {college.applicationRequirements?.map(reqId => (
-                                                        <Badge key={reqId} variant="secondary" className="font-normal">{requirementsMap.get(reqId) || reqId}</Badge>
+                                                        <Badge key={reqId} variant="secondary" className="font-normal">{requirementsMap.get(reqId as RequirementId) || reqId}</Badge>
                                                     ))}
                                                     {college.customRequirements?.map((req, i) => (
                                                         <Badge key={`custom-${i}`} variant="secondary" className="font-normal">{req}</Badge>

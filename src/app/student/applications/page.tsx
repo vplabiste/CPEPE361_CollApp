@@ -3,15 +3,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Clock, CheckCircle, XCircle, Mail, MessageSquare, AlertTriangle } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, Mail, MessageSquare, AlertTriangle, Upload, Plus } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/firebase';
 import { getMyApplications } from '@/app/actions/student';
 import type { Application, DocumentStatus } from '@/lib/college-schemas';
 import { format } from 'date-fns';
 import { ResubmitDocumentDialog } from '@/components/student/resubmit-document-dialog';
+import { AddOtherDocumentDialog } from '../../../components/student/add-other-document-dialog';
 
 function ApplicationSkeleton() {
     return (
@@ -116,7 +118,15 @@ export default function ApplicationsPage() {
                                         )}
 
                                         <div>
-                                            <h4 className="font-semibold mb-3">Submitted Documents</h4>
+                                            <div className="flex justify-between items-center mb-3">
+                                                <h4 className="font-semibold">Submitted Documents</h4>
+                                                {app.status !== 'Accepted' && (
+                                                    <AddOtherDocumentDialog
+                                                        application={app}
+                                                        onSuccess={fetchApplications}
+                                                    />
+                                                )}
+                                            </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {app.documents.map(doc => {
                                                     // FIX: Handle both 'Resubmit' and legacy 'Needs Resubmission' statuses
@@ -163,4 +173,3 @@ export default function ApplicationsPage() {
         </div>
     );
 }
-

@@ -7,6 +7,7 @@ import {
   GraduationCap,
   ClipboardList,
   FileText,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -26,6 +27,7 @@ export function SchoolRepSidebar() {
     { href: '/schoolrep', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/schoolrep/applications', icon: FileText, label: 'Applications' },
     { href: '/schoolrep/programs', icon: ClipboardList, label: 'Programs' },
+    { href: '/schoolrep/messages', icon: MessageSquare, label: 'Messages' },
     { href: '/schoolrep/settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -47,7 +49,7 @@ export function SchoolRepSidebar() {
                         href={item.href}
                         className={cn(
                             'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                             (pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/schoolrep')) && 'bg-accent text-accent-foreground'
+                             (pathname.startsWith(item.href)) && 'bg-accent text-accent-foreground'
                         )}
                     >
                         <item.icon className="h-5 w-5" />

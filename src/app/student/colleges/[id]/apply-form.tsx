@@ -132,7 +132,7 @@ export function ApplyForm({ collegeId, userId, requirements, programs, onSuccess
                             <FormField
                                 key={req.id}
                                 control={form.control}
-                                name={req.id as keyof ApplicationInputs}
+                                name={req.id}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>{req.label}</FormLabel>

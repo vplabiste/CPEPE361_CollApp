@@ -1,3 +1,4 @@
+
 export type UserRole = 'student' | 'schoolrep' | 'admin';
 
 export interface User {
@@ -36,4 +37,7 @@ export interface User {
   birthCertificateUrl?: string;
   schoolIdUrl?: string;
   createdAt?: string;
+
+  // FCM Token
+  fcmToken?: string;
 }

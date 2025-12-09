@@ -3,6 +3,7 @@
 
 import { useState, useTransition, useMemo } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,13 +13,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { Application, DocumentStatus, SubmittedDocument } from '@/lib/college-schemas';
 import { format } from 'date-fns';
-import { CheckCircle, Clock, Eye, Save, Send, AlertTriangle, XCircle, NotebookText } from 'lucide-react';
+import { CheckCircle, Clock, Eye, Save, Send, AlertTriangle, XCircle, NotebookText, MessageSquare } from 'lucide-react';
 import { batchUpdateDocumentStatuses, updateOverallApplicationStatus } from '@/app/actions/schoolrep';
+import { getChatId } from '@/lib/utils';
 import { isEqual } from 'lodash';
 
 interface ApplicantCardProps {
   application: Application;
   onUpdate: (keepOpenId?: string) => void;
+  currentRepId: string;
+  repName: string;
+  repProfilePic: string;
 }
 
 const statusBadgeVariant = {
@@ -34,9 +39,10 @@ const docStatusIcons: { [key in DocumentStatus]: React.ReactNode } = {
   'Resubmit': <AlertTriangle className="h-4 w-4 text-orange-500" />,
 };
 
-export function ApplicantCard({ application, onUpdate }: ApplicantCardProps) {
+export function ApplicantCard({ application, onUpdate, currentRepId, repName, repProfilePic }: ApplicantCardProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const router = useRouter();
   const [decisionMessage, setDecisionMessage] = useState(application.finalMessage || '');
   const [finalProgram, setFinalProgram] = useState('');
   const [documentUpdates, setDocumentUpdates] = useState<SubmittedDocument[]>(application.documents);
@@ -133,6 +139,11 @@ export function ApplicantCard({ application, onUpdate }: ApplicantCardProps) {
           }
       });
   }
+  
+  const handleStartChat = () => {
+    const chatId = getChatId(currentRepId, application.studentId);
+    router.push(`/messages?chatId=${chatId}`);
+  };
 
   const programChoices = [application.firstChoiceProgram, application.secondChoiceProgram].filter(Boolean) as string[];
 
@@ -163,6 +174,11 @@ export function ApplicantCard({ application, onUpdate }: ApplicantCardProps) {
         </div>
       </AccordionTrigger>
       <AccordionContent className="p-4 bg-muted/50 rounded-b-md space-y-6">
+        <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={handleStartChat}>
+                <MessageSquare className="mr-2 h-4 w-4"/> Message Student
+            </Button>
+        </div>
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base"><NotebookText/> Program Choices</CardTitle>
