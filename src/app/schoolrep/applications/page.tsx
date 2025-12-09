@@ -72,9 +72,12 @@ export default function SchoolRepApplicationsPage() {
         return () => unsubscribe();
     }, [fetchAllData]);
 
-    const handleUpdate = async () => {
-        setActiveAccordionItem(undefined);
-        setLoading(true);
+    const handleUpdate = async (keepOpenId?: string) => {
+        setActiveAccordionItem(keepOpenId);
+        const shouldShowSkeleton = !keepOpenId;
+        if (shouldShowSkeleton) {
+            setLoading(true);
+        }
         const firebaseUser = auth.currentUser;
         if (firebaseUser) {
             await fetchAllData(firebaseUser);
