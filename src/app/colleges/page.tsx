@@ -40,10 +40,16 @@ export default async function AllCollegesPage() {
                                     </CardHeader>
                                     <CardContent className="flex-grow flex flex-col">
                                         <CardDescription className="flex-grow text-sm">{college.description}</CardDescription>
-                                        <div className="pt-4 mt-auto">
-                                            <Link href={`/student/colleges/${college.id}`} passHref>
-                                                <Button className="w-full">View Details</Button>
-                                            </Link>
+                                        <div className="pt-4 mt-auto space-y-2">
+                                            {college.url ? (
+                                                <Link href={college.url} target="_blank" rel="noopener noreferrer" passHref>
+                                                    <Button className="w-full">Visit Website</Button>
+                                                </Link>
+                                            ) : (
+                                                <Link href={`/student/colleges/${college.id}`} passHref>
+                                                    <Button className="w-full">View Details</Button>
+                                                </Link>
+                                            )}
                                          </div>
                                     </CardContent>
                                 </Card>
