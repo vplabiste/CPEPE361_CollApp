@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
@@ -52,8 +52,7 @@ export function ChatList({ onChatSelect, initialChatId }: ChatListProps) {
 
     const q = query(
       collection(db, 'chats'),
-      where('participants', 'array-contains', currentUser.uid),
-      orderBy('updatedAt', 'desc')
+      where('participants', 'array-contains', currentUser.uid)
     );
 
     const unsubscribeChats = onSnapshot(q, (snapshot) => {
@@ -63,14 +62,16 @@ export function ChatList({ onChatSelect, initialChatId }: ChatListProps) {
         return { id: doc.id, ...data, updatedAt } as Chat;
       });
       
+      // Sort on the client to avoid needing a composite index
       chatsData.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       
       setChats(chatsData);
       
-      if (initialChatId && chatsData.some(c => c.id === initialChatId)) {
+      if (initialChatId && !selectedChatId && chatsData.length > 0) {
         const foundChat = chatsData.find(c => c.id === initialChatId);
         if (foundChat) {
             onChatSelect(foundChat);
+            setSelectedChatId(foundChat.id);
         }
       }
       setLoading(false);
@@ -80,7 +81,7 @@ export function ChatList({ onChatSelect, initialChatId }: ChatListProps) {
     });
 
     return () => unsubscribeChats();
-  }, [currentUser, initialChatId, onChatSelect]);
+  }, [currentUser, initialChatId, onChatSelect, selectedChatId]);
 
 
   const handleSelectChat = (chat: Chat) => {
