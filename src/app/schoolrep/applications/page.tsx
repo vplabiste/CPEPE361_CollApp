@@ -12,6 +12,8 @@ import { getCollegeByRepId, getApplicationsByCollege } from '@/app/actions/schoo
 import type { Application, College } from '@/lib/college-schemas';
 import { ApplicantCard } from './applicant-card';
 import { Button } from '@/components/ui/button';
+import type { User } from '@/lib/auth-constants';
+import { getUserProfile } from '@/app/actions/student';
 
 function ApplicationsSkeleton() {
     return (
@@ -28,17 +30,23 @@ type FilterType = 'all' | 'pending' | 'resubmission' | 'accepted' | 'rejected';
 
 export default function SchoolRepApplicationsPage() {
     const [college, setCollege] = useState<College | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [applications, setApplications] = useState<Application[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<FilterType>('all');
     const [activeAccordionItem, setActiveAccordionItem] = useState<string | undefined>(undefined);
 
-    const fetchAllData = useCallback(async (user: any) => {
+    const fetchAllData = useCallback(async (firebaseUser: any) => {
         try {
-            const fetchedCollege = await getCollegeByRepId(user.uid);
+            const [fetchedCollege, fetchedUser] = await Promise.all([
+                getCollegeByRepId(firebaseUser.uid),
+                getUserProfile(firebaseUser.uid)
+            ]);
+
             if (fetchedCollege) {
                 setCollege(fetchedCollege);
+                setUser(fetchedUser);
                 const fetchedApplications = await getApplicationsByCollege(fetchedCollege.id);
                 setApplications(fetchedApplications);
             } else {
@@ -52,10 +60,10 @@ export default function SchoolRepApplicationsPage() {
     }, []);
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (user) => {
-            if (user) {
+        const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+            if (firebaseUser) {
                 setLoading(true);
-                await fetchAllData(user);
+                await fetchAllData(firebaseUser);
             } else {
                 setError("You are not logged in.");
                 setLoading(false);
@@ -67,9 +75,9 @@ export default function SchoolRepApplicationsPage() {
     const handleUpdate = async () => {
         setActiveAccordionItem(undefined);
         setLoading(true);
-        const user = auth.currentUser;
-        if (user) {
-            await fetchAllData(user);
+        const firebaseUser = auth.currentUser;
+        if (firebaseUser) {
+            await fetchAllData(firebaseUser);
         }
     };
 
@@ -103,7 +111,7 @@ export default function SchoolRepApplicationsPage() {
         return <ApplicationsSkeleton />;
     }
 
-    if (error) {
+    if (error || !user) {
         return (
             <Alert variant="destructive">
                 <AlertTriangle className="h-5 w-5" />
@@ -157,7 +165,14 @@ export default function SchoolRepApplicationsPage() {
                     {filteredApplications.length > 0 ? (
                         <Accordion type="single" collapsible className="w-full" value={activeAccordionItem} onValueChange={setActiveAccordionItem}>
                             {filteredApplications.map(app => (
-                                <ApplicantCard key={app.id} application={app} onUpdate={handleUpdate} />
+                                <ApplicantCard 
+                                    key={app.id} 
+                                    application={app} 
+                                    onUpdate={handleUpdate} 
+                                    currentRepId={user.uid}
+                                    repName={`${user.firstName} ${user.lastName}`}
+                                    repProfilePic={user.profilePictureUrl || ''}
+                                />
                             ))}
                         </Accordion>
                     ) : (

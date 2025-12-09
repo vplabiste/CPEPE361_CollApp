@@ -170,3 +170,38 @@ export async function getSystemStatus() {
     cloudinary: cloudinaryConfigured,
   };
 }
+
+export async function getChatUsers(currentUserId: string, currentUserRole: UserRole): Promise<User[]> {
+    if (!currentUserId || !currentUserRole) {
+        return [];
+    }
+
+    try {
+        let usersQuery;
+        if (currentUserRole === 'student') {
+            // Students can chat with reps and admins
+            usersQuery = adminDb.collection('users').where('role', 'in', ['schoolrep', 'admin']);
+        } else if (currentUserRole === 'schoolrep') {
+            // Reps can chat with students and admins
+            usersQuery = adminDb.collection('users').where('role', 'in', ['student', 'admin']);
+        } else {
+            // Admins can chat with anyone
+            usersQuery = adminDb.collection('users');
+        }
+
+        const snapshot = await usersQuery.get();
+        if (snapshot.empty) {
+            return [];
+        }
+
+        // CRITICAL FIX: Filter out the current user from the results
+        const users = snapshot.docs
+            .map(doc => ({ uid: doc.id, ...doc.data() } as User))
+            .filter(user => user.uid !== currentUserId); // Exclude self
+
+        return users;
+    } catch (error) {
+        console.error("Error fetching chat users:", error);
+        return [];
+    }
+}

@@ -3,6 +3,7 @@ import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import { getMessaging, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,8 +18,8 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
+let messaging: Messaging | null = null;
 
-// Check if all required keys are present and not placeholders
 const isFirebaseConfigured =
   firebaseConfig.apiKey &&
   firebaseConfig.authDomain &&
@@ -36,6 +37,10 @@ if (isFirebaseConfigured) {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    // Initialize messaging only in the browser
+    if (typeof window !== 'undefined') {
+        messaging = getMessaging(app);
+    }
 } else {
     console.error(
         '********************************************************************************\n' +
@@ -44,7 +49,6 @@ if (isFirebaseConfigured) {
         'Please add your Firebase project credentials to your .env.local file and restart the server.\n' +
         '********************************************************************************'
     );
-    // Provide dummy/mock objects to prevent app crash on startup if not configured.
     app = {} as FirebaseApp;
     auth = {} as Auth;
     db = {} as Firestore;
@@ -52,4 +56,4 @@ if (isFirebaseConfigured) {
 }
 
 
-export { app, auth, db, storage };
+export { app, auth, db, storage, messaging, isFirebaseConfigured };

@@ -1,21 +1,85 @@
 
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getCollegeById } from '@/app/actions/colleges';
 import { getPlatformSettings } from '@/app/actions/settings';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { Check, Download, FileText, School, NotebookText } from 'lucide-react';
-import { availableRequirements } from '@/lib/college-schemas';
+import { Check, Download, FileText, School, NotebookText, MessageSquare } from 'lucide-react';
+import { availableRequirements, type College } from '@/lib/college-schemas';
+import type { PlatformSettings } from '@/lib/settings-schemas';
 import { ApplyButton } from './apply-button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { auth } from '@/lib/firebase';
+import { getChatId } from '@/lib/utils';
 
-export default async function CollegeDetailsPage({ params }: { params: { id: string } }) {
-  const college = await getCollegeById(params.id);
-  const settings = await getPlatformSettings();
-  
-  if (!college) {
-    notFound();
+function CollegeDetailsSkeleton() {
+  return (
+    <div className="w-full space-y-8">
+      <Card className="overflow-hidden">
+        <Skeleton className="h-48 w-full" />
+      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+        <div className="space-y-8">
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CollegeDetailsPage({ params }: { params: { id: string } }) {
+  const [college, setCollege] = useState<College | null>(null);
+  const [settings, setSettings] = useState<PlatformSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [collegeData, settingsData] = await Promise.all([
+          getCollegeById(params.id),
+          getPlatformSettings(),
+        ]);
+        if (!collegeData) {
+          router.push('/404');
+          return;
+        }
+        setCollege(collegeData);
+        setSettings(settingsData);
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      setCurrentUserId(user?.uid || null);
+    });
+    
+    fetchData();
+
+    return () => unsubscribe();
+  }, [params.id, router]);
+
+  const handleStartChat = () => {
+    if (!currentUserId || !college?.repUid) return;
+    const chatId = getChatId(currentUserId, college.repUid);
+    router.push(`/messages?chatId=${chatId}`);
+  };
+
+  if (loading || !college || !settings) {
+    return <CollegeDetailsSkeleton />;
   }
 
   const requirementsMap = new Map(availableRequirements.map(req => [req.id, req.label]));
@@ -26,7 +90,6 @@ export default async function CollegeDetailsPage({ params }: { params: { id: str
 
   return (
     <div className="w-full space-y-8">
-      {/* Header section */}
       <Card className="overflow-hidden">
         <div className="relative h-48 w-full bg-muted">
            <Image
@@ -46,7 +109,6 @@ export default async function CollegeDetailsPage({ params }: { params: { id: str
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          {/* About Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><School className="h-5 w-5" /> About {college.name}</CardTitle>
@@ -61,7 +123,6 @@ export default async function CollegeDetailsPage({ params }: { params: { id: str
             </CardContent>
           </Card>
 
-          {/* Programs Offered */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><NotebookText className="h-5 w-5" /> Programs Offered</CardTitle>
@@ -80,7 +141,6 @@ export default async function CollegeDetailsPage({ params }: { params: { id: str
             </CardContent>
           </Card>
 
-          {/* Brochures Section */}
           {college.brochureUrls && college.brochureUrls.length > 0 && (
             <Card>
               <CardHeader>
@@ -99,11 +159,9 @@ export default async function CollegeDetailsPage({ params }: { params: { id: str
               </CardContent>
             </Card>
           )}
-
         </div>
 
         <div className="space-y-8">
-            {/* Application Requirements */}
             <Card className="sticky top-20">
                 <CardHeader>
                     <CardTitle>Application Requirements</CardTitle>
@@ -120,15 +178,19 @@ export default async function CollegeDetailsPage({ params }: { params: { id: str
                     ) : (
                         <p className="text-sm text-muted-foreground">No specific requirements listed.</p>
                     )}
+                    <div className="pt-4 space-y-2">
+                        <ApplyButton 
+                            collegeId={college.id} 
+                            requirements={allRequirements}
+                            applicationsOpen={settings.applicationsOpen}
+                            programs={college.programs || []}
+                        />
+                        <Button variant="outline" className="w-full" onClick={handleStartChat} disabled={!currentUserId}>
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Message Representative
+                        </Button>
+                    </div>
                 </CardContent>
-                <div className="p-6 pt-0">
-                     <ApplyButton 
-                        collegeId={college.id} 
-                        requirements={allRequirements}
-                        applicationsOpen={settings.applicationsOpen}
-                        programs={college.programs || []}
-                     />
-                </div>
             </Card>
         </div>
       </div>
