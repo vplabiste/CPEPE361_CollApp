@@ -60,8 +60,21 @@ export function SchoolRepHeader() {
   }, [pathname]); // Re-run on path change to catch updates
 
 
+  const clearThemePreference = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem('collapp-theme');
+      const root = window.document.documentElement;
+      root.classList.remove('dark');
+      root.classList.add('light');
+    } catch (e) {
+      console.warn('Failed to clear theme preference on logout', e);
+    }
+  };
+
   const handleLogout = async () => {
     try {
+      clearThemePreference();
       await signOut(auth);
       router.push('/');
     } catch (error) {
