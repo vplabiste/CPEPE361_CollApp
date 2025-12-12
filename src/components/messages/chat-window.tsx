@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Loader2 } from 'lucide-react';
@@ -52,9 +51,8 @@ export function ChatWindow({ chat }: ChatWindowProps) {
       setLoading(false);
       
       setTimeout(() => {
-        const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
-        if (viewport) {
-           viewport.scrollTop = viewport.scrollHeight;
+        if (scrollAreaRef.current) {
+           scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
         }
       }, 100);
     }, (error) => {
@@ -117,8 +115,8 @@ export function ChatWindow({ chat }: ChatWindowProps) {
             </div>
           )}
         </CardHeader>
-        <CardContent className="flex-grow p-0 overflow-hidden">
-          <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
+        <CardContent className="p-0">
+          <div className="h-[calc(100vh-270px)] overflow-y-auto p-4" ref={scrollAreaRef}>
             {loading ? (
               <div className="space-y-4">
                 <Skeleton className="h-10 w-3/5" />
@@ -157,7 +155,7 @@ export function ChatWindow({ chat }: ChatWindowProps) {
                 )
               })
             )}
-          </ScrollArea>
+          </div>
         </CardContent>
         <CardFooter className="p-4 border-t">
           <div className="flex w-full items-center space-x-2">
