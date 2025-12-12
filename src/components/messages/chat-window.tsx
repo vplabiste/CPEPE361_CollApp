@@ -67,19 +67,38 @@ export function ChatWindow({ chat }: ChatWindowProps) {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !currentUser || isSending) return;
-    
+
+    const messageText = newMessage.trim();
     setIsSending(true);
+
+    // Optimistically add message to local state
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`, // Temporary ID
+      text: messageText,
+      senderId: currentUser.uid,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage('');
+
     try {
-        const result = await sendMessage(chat.id, currentUser.uid, newMessage, chat.participantInfo);
-        
-        if (result.success && result.data) {
-            setNewMessage('');
+        const result = await sendMessage(chat.id, currentUser.uid, messageText, chat.participantInfo);
+
+        if (result.success) {
+            // Message sent successfully, the onSnapshot will update with real data
         } else {
             console.error("Failed to send message:", result.message);
-            // Optionally, show an error toast to the user
+            // Remove optimistic message on failure
+            setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+            setNewMessage(messageText); // Restore the message text
         }
     } catch (error) {
         console.error("An error occurred while sending the message:", error);
+        // Remove optimistic message on failure
+        setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+        setNewMessage(messageText); // Restore the message text
     } finally {
         setIsSending(false);
     }

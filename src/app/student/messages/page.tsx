@@ -19,7 +19,7 @@ export default function MessagesPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-theme(spacing.28))] flex flex-col">
+        <div className="min-h-[calc(100vh-theme(spacing.28))] flex flex-col">
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow">
                 <div className="md:col-span-1 lg:col-span-1 h-full">
                     <ChatList onChatSelect={handleChatSelect} initialChatId={initialChatId}/>
