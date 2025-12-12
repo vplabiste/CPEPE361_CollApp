@@ -190,7 +190,6 @@ export default function CollegesPage() {
                                             ) : <p className="text-xs text-muted-foreground">None specified.</p>}
                                         </div>
                                     </div>
-                                    <p className="text-sm text-muted-foreground pt-1">Deadline: March 15, 2025</p>
                                 </div>
                                 <div className="flex flex-col items-start sm:items-end gap-2 shrink-0 pt-2 sm:pt-0">
                                     <p className="text-sm font-medium text-muted-foreground">{displayStatus}</p>
