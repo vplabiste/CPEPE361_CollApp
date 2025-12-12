@@ -14,7 +14,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { sendMessage, markMessagesAsRead } from '@/app/actions/messages';
 import type { Chat, Message } from '@/lib/message-schemas';
-import { MessageCheckDialog } from './message-check-dialog';
 
 interface ChatWindowProps {
   chat: Chat;
@@ -28,9 +27,7 @@ export function ChatWindow({ chat }: ChatWindowProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const currentUser = auth.currentUser;
 
-  // State for the message check dialog
-  const [isCheckDialogOpen, setIsCheckDialogOpen] = useState(false);
-  const [lastSavedMessage, setLastSavedMessage] = useState<Message | null>(null);
+
   
   const otherParticipantId = chat.participants.find(p => p !== currentUser?.uid);
   const otherParticipantInfo = otherParticipantId ? chat.participantInfo[otherParticipantId] : null;
@@ -78,8 +75,6 @@ export function ChatWindow({ chat }: ChatWindowProps) {
         const result = await sendMessage(chat.id, currentUser.uid, newMessage, chat.participantInfo);
         
         if (result.success && result.data) {
-            setLastSavedMessage(result.data);
-            setIsCheckDialogOpen(true);
             setNewMessage('');
         } else {
             console.error("Failed to send message:", result.message);
@@ -179,11 +174,6 @@ export function ChatWindow({ chat }: ChatWindowProps) {
           </div>
         </CardFooter>
       </Card>
-      <MessageCheckDialog 
-        isOpen={isCheckDialogOpen}
-        setIsOpen={setIsCheckDialogOpen}
-        message={lastSavedMessage}
-      />
     </>
   );
 }
