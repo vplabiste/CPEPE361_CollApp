@@ -75,7 +75,7 @@ export default function CollegeDetailsPage({ params }: { params: { id: string } 
   const handleStartChat = () => {
     if (!currentUserId || !college?.repUid) return;
     const chatId = getChatId(currentUserId, college.repUid);
-    router.push(`/messages?chatId=${chatId}`);
+    router.push(`/student/messages?chatId=${chatId}`);
   };
 
   if (loading || !college || !settings) {
