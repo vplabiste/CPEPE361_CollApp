@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, Loader2 } from 'lucide-react';
@@ -14,7 +13,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { sendMessage, markMessagesAsRead } from '@/app/actions/messages';
 import type { Chat, Message } from '@/lib/message-schemas';
-import { MessageCheckDialog } from './message-check-dialog';
 
 interface ChatWindowProps {
   chat: Chat;
@@ -28,9 +26,7 @@ export function ChatWindow({ chat }: ChatWindowProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const currentUser = auth.currentUser;
 
-  // State for the message check dialog
-  const [isCheckDialogOpen, setIsCheckDialogOpen] = useState(false);
-  const [lastSavedMessage, setLastSavedMessage] = useState<Message | null>(null);
+
   
   const otherParticipantId = chat.participants.find(p => p !== currentUser?.uid);
   const otherParticipantInfo = otherParticipantId ? chat.participantInfo[otherParticipantId] : null;
@@ -55,9 +51,8 @@ export function ChatWindow({ chat }: ChatWindowProps) {
       setLoading(false);
       
       setTimeout(() => {
-        const viewport = scrollAreaRef.current?.querySelector('div[data-radix-scroll-area-viewport]');
-        if (viewport) {
-           viewport.scrollTop = viewport.scrollHeight;
+        if (scrollAreaRef.current) {
+           scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
         }
       }, 100);
     }, (error) => {
@@ -72,21 +67,38 @@ export function ChatWindow({ chat }: ChatWindowProps) {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !currentUser || isSending) return;
-    
+
+    const messageText = newMessage.trim();
     setIsSending(true);
+
+    // Optimistically add message to local state
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`, // Temporary ID
+      text: messageText,
+      senderId: currentUser.uid,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage('');
+
     try {
-        const result = await sendMessage(chat.id, currentUser.uid, newMessage, chat.participantInfo);
-        
-        if (result.success && result.data) {
-            setLastSavedMessage(result.data);
-            setIsCheckDialogOpen(true);
-            setNewMessage('');
+        const result = await sendMessage(chat.id, currentUser.uid, messageText, chat.participantInfo);
+
+        if (result.success) {
+            // Message sent successfully, the onSnapshot will update with real data
         } else {
             console.error("Failed to send message:", result.message);
-            // Optionally, show an error toast to the user
+            // Remove optimistic message on failure
+            setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+            setNewMessage(messageText); // Restore the message text
         }
     } catch (error) {
         console.error("An error occurred while sending the message:", error);
+        // Remove optimistic message on failure
+        setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+        setNewMessage(messageText); // Restore the message text
     } finally {
         setIsSending(false);
     }
@@ -122,8 +134,8 @@ export function ChatWindow({ chat }: ChatWindowProps) {
             </div>
           )}
         </CardHeader>
-        <CardContent className="flex-grow p-0 overflow-hidden">
-          <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
+        <CardContent className="p-0">
+          <div className="h-[calc(100vh-270px)] overflow-y-auto p-4" ref={scrollAreaRef}>
             {loading ? (
               <div className="space-y-4">
                 <Skeleton className="h-10 w-3/5" />
@@ -162,7 +174,7 @@ export function ChatWindow({ chat }: ChatWindowProps) {
                 )
               })
             )}
-          </ScrollArea>
+          </div>
         </CardContent>
         <CardFooter className="p-4 border-t">
           <div className="flex w-full items-center space-x-2">
@@ -179,11 +191,6 @@ export function ChatWindow({ chat }: ChatWindowProps) {
           </div>
         </CardFooter>
       </Card>
-      <MessageCheckDialog 
-        isOpen={isCheckDialogOpen}
-        setIsOpen={setIsCheckDialogOpen}
-        message={lastSavedMessage}
-      />
     </>
   );
 }

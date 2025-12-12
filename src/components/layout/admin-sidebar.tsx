@@ -6,6 +6,7 @@ import {
   Building2,
   Settings,
   GraduationCap,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -25,6 +26,7 @@ export function AdminSidebar() {
     { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/admin/users', icon: Users, label: 'Users' },
     { href: '/admin/colleges', icon: Building2, label: 'Colleges' },
+    { href: '/admin/messages', icon: MessageSquare, label: 'Messages' },
     { href: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
 
