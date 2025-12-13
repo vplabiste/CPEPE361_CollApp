@@ -8,6 +8,7 @@ import {
   Users,
   Building2,
   LayoutDashboard,
+  MessageSquare,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import Link from 'next/link';
@@ -98,6 +99,10 @@ export function AdminHeader() {
                 <Link href="/admin/colleges" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                     <Building2 className="h-5 w-5" />
                     Colleges
+                </Link>
+                <Link href="/admin/messages" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                    <MessageSquare className="h-5 w-5" />
+                    Messages
                 </Link>
                  <Link href="/admin/settings" className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                     <Settings className="h-5 w-5" />

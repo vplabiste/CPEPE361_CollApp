@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   FileText,
+  MessageSquare,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import Link from 'next/link';
@@ -140,6 +141,13 @@ export function StudentHeader() {
                 >
                 <FileText className="h-5 w-5" />
                 Applications
+                </Link>
+                <Link
+                href="/student/messages"
+                className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                <MessageSquare className="h-5 w-5" />
+                Messages
                 </Link>
                  <Link
                 href="/student/settings"
